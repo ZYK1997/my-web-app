@@ -4,6 +4,8 @@ import aiomysql
 
 
 def log(sql, args=()):
+    print(sql)
+    print(args)
     logging.info("SQL: %s" % sql)
 
 
@@ -40,7 +42,7 @@ async def select(sql, args, size=None):
 
 
 async def execute(sql, args, autocommit=True):
-    log(sql)
+    log(sql, args)
     global __pool
     async with __pool.get() as conn:
         if not autocommit:
@@ -62,7 +64,7 @@ def create_args_string(n):
     ret = []
     for _ in range(n):
         ret.append('?')
-    return ','.join(ret)
+    return ', '.join(ret)
 
 
 class Field(object):
@@ -137,10 +139,10 @@ class ModelMetaclass(type):
                               (primary_key,
                                ', '.join(escaped_fields),
                                table_name)
-        attrs['__insert__'] = 'insert into `%s` (%s, `%s`) values (%s)' % \
+        attrs['__insert__'] = 'insert into `%s` (`%s`, %s) values (%s)' % \
                               (table_name,
-                               ', '.join(escaped_fields),
                                primary_key,
+                               ', '.join(escaped_fields),
                                create_args_string(len(escaped_fields) + 1))
         attrs['__update__'] = 'update `%s` set %s where `%s`=?' % \
                               (table_name,
@@ -242,15 +244,15 @@ class Model(dict, metaclass=ModelMetaclass):
             return cls(**rs[0])
     
     async def save(self):
-        args = list(map(self.getValueOrDefault, self.__fields__))
-        args.append(self.getValueOrDefault(self.__primary_key__))
+        args = [self.getValueOrDefault(self.__primary_key__)]
+        args += list(map(self.getValueOrDefault, self.__fields__))
         rows = await execute(self.__insert__, args)
         if rows != 1:
             logging.warn("failed to insert record: affected rows: %s" % rows)
 
     async def update(self):
         args = list(map(self.getValue, self.__fields__))
-        args = append(self.getValue(self.__primary_key__))
+        args.append(self.getValue(self.__primary_key__))
         rows = await execute(self.__update__, args)
         if rows != 1:
             logging.warn("failed to update by primary key: affected rows: %s" % rows)

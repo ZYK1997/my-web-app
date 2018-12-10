@@ -4,8 +4,8 @@ import aiomysql
 
 
 def log(sql, args=()):
-    print(sql)
-    print(args)
+    # print(sql)
+    # print(args)
     logging.info("SQL: %s" % sql)
 
 

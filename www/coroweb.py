@@ -9,6 +9,9 @@ from aiohttp import web
 from apis import APIError
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 def get(path):
     """
     Define decorator @get('/path')
@@ -116,7 +119,7 @@ class RequestHandler(object):
                 if query:
                     kw = dict()
                     for k, v in parse.parse_qs(query, True).items():
-                        kw[k] = v
+                        kw[k] = v[0]
 
         if kw is None:
             kw = dict(**request.match_info)
@@ -138,7 +141,7 @@ class RequestHandler(object):
         if self._required_kw_args:
             for name in self._required_kw_args:
                 if name not in kw:
-                    return web.HTTPBadRequest("Missing argument: %s" % name)
+                    return web.HTTPBadRequest("Missing argument: {}".format(name))
         logging.info("call with args: %s" % str(kw))
 
         try:

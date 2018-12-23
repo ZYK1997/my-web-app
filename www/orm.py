@@ -3,6 +3,9 @@ import logging
 import aiomysql
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 def log(sql, args=()):
     # print(sql)
     # print(args)
@@ -234,10 +237,10 @@ class Model(dict, metaclass=ModelMetaclass):
             find objects by primary key
         """
         rs = await select(
-            "%s where `%s`=?" % (cls.__select__, cls.__primary_key__), 
+            "%s where `%s`=?" % (cls.__select__, cls.__primary_key__),
             [pk], 
             1
-            )
+        )
         if len(rs) == 0:
             return None
         else:
